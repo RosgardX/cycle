@@ -7,8 +7,8 @@ digraph G {
 
   subgraph cluster_f {
     label="Функция book_training"; labeljust=l; style="rounded"; color="#999999"; fontsize=13;
-    f1 [label="Занятие ещё не началось?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=0.8];
-    f2 [label="Клиент ещё не записан?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=0.8];
+    f1 [label="Занятие уже началось?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=0.8];
+    f2 [label="Клиент уже записан\nна это занятие?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=0.8];
     f3 [label="Если абонемент не указан, выбрать действующий\nс ближайшей датой окончания"];
     f4 [label="INSERT INTO booking"];
   }
@@ -16,8 +16,8 @@ digraph G {
   subgraph cluster_t {
     label="Триггер booking_insert"; labeljust=l; style="rounded"; color="#999999"; fontsize=13;
     t1 [label="Заблокировать строку занятия\n(SELECT ... FOR UPDATE)"];
-    t2 [label="Абонемент этого клиента, действует\nи не заканчивается до начала?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=1.1];
-    t3 [label="Есть свободное место?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=0.8];
+    t2 [label="Абонемент чужой, не действует\nили заканчивается до начала занятия?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=1.1];
+    t3 [label="Все места заняты?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=0.8];
     t4 [label="Списать занятие:\nvisits_left = visits_left − 1"];
   }
 
@@ -31,7 +31,13 @@ digraph G {
   node [shape=box, style="rounded,filled", fillcolor="#f8cecc", color="#b85450", width=2.4, height=0.5, group=""];
   e1 [label="Ошибка, откат"]; e2 [label="Ошибка, откат"]; e3 [label="Ошибка, откат"]; e4 [label="Ошибка, откат"];
 
-  start -> f1 -> f2 -> f3 -> f4 -> t1 -> t2 -> t3 -> t4 -> s1 -> ok;
-  f1 -> e1 [xlabel="нет"]; f2 -> e2 [xlabel="нет"]; t2 -> e3 [xlabel="нет"]; t3 -> e4 [xlabel="нет"];
+  start -> f1;
+  f1 -> f2 [xlabel="нет  "];
+  f2 -> f3 [xlabel="нет  "];
+  f3 -> f4 -> t1 -> t2;
+  t2 -> t3 [xlabel="нет  "];
+  t3 -> t4 [xlabel="нет  "];
+  t4 -> s1 -> ok;
+  f1 -> e1 [xlabel="  да"]; f2 -> e2 [xlabel="  да"]; t2 -> e3 [xlabel="  да"]; t3 -> e4 [xlabel="  да"];
   {rank=same; f1; e1} {rank=same; f2; e2} {rank=same; t2; e3} {rank=same; t3; e4}
 }
