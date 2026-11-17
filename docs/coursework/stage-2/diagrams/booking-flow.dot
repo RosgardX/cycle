@@ -1,0 +1,37 @@
+digraph G {
+  graph [rankdir=TB, fontname="DejaVu Sans", fontsize=13, nodesep=0.6, ranksep=0.3, splines=ortho, newrank=true];
+  node [fontname="DejaVu Sans", fontsize=12, shape=box, style="rounded,filled", fillcolor="#dae8fc", color="#6c8ebf", width=4.4, height=0.6, group=main];
+  edge [fontname="DejaVu Sans", fontsize=11, arrowsize=0.7];
+
+  start [label="Клиент нажимает «Записаться»", shape=ellipse, fillcolor="#f5f5f5", color="#666666"];
+
+  subgraph cluster_f {
+    label="Функция book_training"; labeljust=l; style="rounded"; color="#999999"; fontsize=13;
+    f1 [label="Занятие ещё не началось?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=0.8];
+    f2 [label="Клиент ещё не записан?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=0.8];
+    f3 [label="Если абонемент не указан, выбрать действующий\nс ближайшей датой окончания"];
+    f4 [label="INSERT INTO booking"];
+  }
+
+  subgraph cluster_t {
+    label="Триггер booking_insert"; labeljust=l; style="rounded"; color="#999999"; fontsize=13;
+    t1 [label="Заблокировать строку занятия\n(SELECT ... FOR UPDATE)"];
+    t2 [label="Абонемент этого клиента, действует\nи не заканчивается до начала?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=1.1];
+    t3 [label="Есть свободное место?", shape=diamond, fillcolor="#fff2cc", color="#d6b656", height=0.8];
+    t4 [label="Списать занятие:\nvisits_left = visits_left − 1"];
+  }
+
+  subgraph cluster_s {
+    label="Триггер subscription_check"; labeljust=l; style="rounded"; color="#999999"; fontsize=13;
+    s1 [label="Если остаток стал 0,\nстатус «использован»"];
+  }
+
+  ok [label="Запись создана, транзакция фиксируется", shape=ellipse, fillcolor="#d5e8d4", color="#82b366"];
+
+  node [shape=box, style="rounded,filled", fillcolor="#f8cecc", color="#b85450", width=2.4, height=0.5, group=""];
+  e1 [label="Ошибка, откат"]; e2 [label="Ошибка, откат"]; e3 [label="Ошибка, откат"]; e4 [label="Ошибка, откат"];
+
+  start -> f1 -> f2 -> f3 -> f4 -> t1 -> t2 -> t3 -> t4 -> s1 -> ok;
+  f1 -> e1 [xlabel="нет"]; f2 -> e2 [xlabel="нет"]; t2 -> e3 [xlabel="нет"]; t3 -> e4 [xlabel="нет"];
+  {rank=same; f1; e1} {rank=same; f2; e2} {rank=same; t2; e3} {rank=same; t3; e4}
+}
